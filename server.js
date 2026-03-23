@@ -32,14 +32,10 @@ console.log(`🚀 Port: ${PORT}`);
 
 // Middleware
 app.use(cors({
-    origin: [
-        'http://localhost:3000',      // React app (local)
-        'https://loan-server-pfyk.onrender.com',      // WhatsApp server itself (local)
-        'https://yashasavibhava.com', // Production domain
-        'https://loan-server-pfyk.onrender.com',  // Render deployment
-        'https://loan-server-pfyk.onrender.com/qr',  // Render QR page
-        'https://vfsloanbridge.com/'
-    ],
+    origin: function (origin, callback) {
+        // Allow all origins (for ease of deployment)
+        callback(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
