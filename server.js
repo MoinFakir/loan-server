@@ -36,8 +36,8 @@ app.use(cors({
         'http://localhost:3000',      // React app (local)
         'http://localhost:3001',      // WhatsApp server itself (local)
         'https://yashasavibhava.com', // Production domain
-        'https://loan-server-pfyk.onrender.com',  // Render deployment
-        'https://loan-server-pfyk.onrender.com/qr'  // Render QR page
+        'http://localhost:3001',  // Render deployment
+        'http://localhost:3001/qr'  // Render QR page
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -110,10 +110,6 @@ const initializeWhatsApp = () => {
                     '--js-flags=--max-old-space-size=256'  // Very low memory for free tier
                 ],
                 timeout: NODE_ENV === 'production' ? 90000 : 120000  // 90s timeout in production
-            },
-            webVersionCache: {
-                type: 'remote',
-                remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
             }
         });
 
@@ -139,7 +135,7 @@ const initializeWhatsApp = () => {
 
                 console.log('✅ QR Code ready!');
                 console.log('🌐 Local: http://localhost:3001/qr');
-                console.log('🌐 Production: https://loan-server-pfyk.onrender.com/qr');
+                console.log('🌐 Production: http://localhost:3001/qr');
                 console.log('📱 Or scan the QR code below:');
 
                 // Display QR in console
@@ -472,7 +468,13 @@ app.post('/api/whatsapp/send-message', async (req, res) => {
         }
 
         // Format phone number for WhatsApp
-        const formattedPhone = phone.includes('@c.us') ? phone : `${phone}@c.us`;
+        let cleanPhone = phone.includes('@c.us') ? phone.replace('@c.us', '') : phone;
+        let numericPhone = cleanPhone.replace(/\D/g, '');
+        // If it's a 10-digit number, assume India (+91)
+        if (numericPhone.length === 10) {
+            numericPhone = '91' + numericPhone;
+        }
+        const formattedPhone = `${numericPhone}@c.us`;
 
         // Send message with timeout
         const sendTimeout = new Promise((_, reject) =>
@@ -532,7 +534,12 @@ app.post('/api/whatsapp/send-bulk', async (req, res) => {
 
         for (const contact of contacts) {
             try {
-                const formattedPhone = contact.phone.includes('@c.us') ? contact.phone : `${contact.phone}@c.us`;
+                let cleanPhone = contact.phone.includes('@c.us') ? contact.phone.replace('@c.us', '') : contact.phone;
+                let numericPhone = cleanPhone.replace(/\D/g, '');
+                if (numericPhone.length === 10) {
+                    numericPhone = '91' + numericPhone;
+                }
+                const formattedPhone = `${numericPhone}@c.us`;
 
                 const sentMessage = await client.sendMessage(formattedPhone, message);
 
